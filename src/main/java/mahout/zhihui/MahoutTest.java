@@ -18,7 +18,7 @@ import org.apache.mahout.cf.taste.similarity.UserSimilarity;
 public class MahoutTest {
 
     public static void main(String[] args) throws Exception {
-        userCfTest();
+//        userCfTest();
         itemCfTest();
     }
 
