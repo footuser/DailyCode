@@ -11,6 +11,9 @@ func main() {
 
 func testFor() {
 	for i := 0; i < 10; i++ {
-		fmt.Printf("%d", i)
+		fmt.Printf("%d\n", i)
 	}
+}
+
+func testGoto() {
 }
