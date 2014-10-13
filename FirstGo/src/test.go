@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	. "stack"
 )
 
 func main() {
@@ -14,7 +15,36 @@ func main() {
 //	print(a4_1(arr[:]))
 //	i,j := a6(8, 8)
 //	print(i,j)
+	s := new (Stack)
+	s.Push(1)
+//	s.Push(22)
+//	fmt.Printf("%v\n", s)
+//	fmt.Printf("%d\n", s.Pop)
 
+	var c chan int
+	c = make(chan int)
+	quit := make(chan bool)
+	go shower(c, quit)
+	for i:=1; i<10; i++ {
+		if i > 5 {
+			quit <- true
+		} else {
+			c <- i
+		}
+	}
+
+}
+
+func shower(c chan int, quit chan bool) {
+	for {
+		select {
+			case i := <- c:
+				println(i)
+			case <- quit:
+				break
+		}
+		
+	}
 }
 
 func testGoto() {
