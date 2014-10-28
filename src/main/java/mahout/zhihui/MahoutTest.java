@@ -34,8 +34,8 @@ public class MahoutTest {
 
     public static void main(String[] args) throws Exception {
         // userCfTest();
-        // itemCfTest();
-        userCfEvaluate();
+         itemCfTest();
+//        userCfEvaluate();
         // testPrefence();
     }
 
