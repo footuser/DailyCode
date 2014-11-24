@@ -551,8 +551,15 @@ public class DateUtils {
 
         return (hour > 0 ? hour + "时 " : "") + min + "分 " + second + "秒";
     }
+    
+    public static String getMons() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        calendar.add(Calendar.MONTH, -1);
+        return formatDate(calendar.getTime(), "yyyyMM", null);
+    }
 
     public static void main(String[] args) {
-        System.out.println(format(7200d));
+        System.out.println(getMons());
     }
 }
