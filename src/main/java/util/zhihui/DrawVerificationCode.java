@@ -23,20 +23,14 @@ public class DrawVerificationCode extends HttpServlet {
 
     /**
      * The doGet method of the servlet. <br>
-     * 
      * This method is called when a form has its tag value method equals to get.
      * 
-     * @param request
-     *            the request send by the client to the server
-     * @param response
-     *            the response send by the server to the client
-     * @throws ServletException
-     *             if an error occurred
-     * @throws IOException
-     *             if an error occurred
+     * @param request the request send by the client to the server
+     * @param response the response send by the server to the client
+     * @throws ServletException if an error occurred
+     * @throws IOException if an error occurred
      */
-    public void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // 设置页面不缓存
         response.setHeader("Pragma", "No-cache");
         response.setHeader("Cache-Control", "no-cache");
@@ -44,8 +38,7 @@ public class DrawVerificationCode extends HttpServlet {
 
         // 在内存中创建图象
         int width = 60, height = 20;
-        BufferedImage image = new BufferedImage(width, height,
-                BufferedImage.TYPE_INT_RGB);
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
         // 获取图形上下文
         Graphics g = image.getGraphics();
@@ -75,19 +68,12 @@ public class DrawVerificationCode extends HttpServlet {
         }
 
         // 取随机产生的认证码(4位数字)
-        String sRand = "";
         for (int i = 0; i < 4; i++) {
             String rand = String.valueOf(random.nextInt(10));
-            sRand += rand;
             // 将认证码显示到图象中
-            g.setColor(new Color(20 + random.nextInt(110), 20 + random
-                    .nextInt(110), 20 + random.nextInt(110))); // 调用函数出来的颜色相同，可能是因为种子太接近，所以只能直接生成
+            g.setColor(new Color(20 + random.nextInt(110), 20 + random.nextInt(110), 20 + random.nextInt(110))); // 调用函数出来的颜色相同，可能是因为种子太接近，所以只能直接生成
             g.drawString(rand, 13 * i + 6, 16);
         }
-        
-        HttpSession session = request.getSession();
-        session.setAttribute("CODE",sRand);
-        
 
         // 图象生效
         g.dispose();
