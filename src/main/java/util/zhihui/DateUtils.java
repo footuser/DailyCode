@@ -5,6 +5,9 @@
  */
 package util.zhihui;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -551,7 +554,7 @@ public class DateUtils {
 
         return (hour > 0 ? hour + "时 " : "") + min + "分 " + second + "秒";
     }
-    
+
     public static String getMons() {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
@@ -559,7 +562,27 @@ public class DateUtils {
         return formatDate(calendar.getTime(), "yyyyMM", null);
     }
 
+    private static String readUserInput(String prompt) throws IOException {
+        // 先定义接受用户输入的变量
+        String result;
+        do {
+            // 输出提示文字
+            System.out.print(prompt);
+            InputStreamReader is_reader = new InputStreamReader(System.in);
+            result = new BufferedReader(is_reader).readLine();
+        } while (isInvalid(result)); // 当用户输入无效的时候，反复提示要求用户输入
+        return result;
+    }
+
+    private static boolean isInvalid(String str) {
+        return str.equals("");
+    }
+
     public static void main(String[] args) {
-        System.out.println(getMons());
+        try {
+            System.out.println("您输入的是：" + readUserInput("请输入："));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -98,7 +98,12 @@ public final class GetTopKWord {
         // counts.saveAsHadoopFile(args[1], Text.class, IntWritable.class,
         // TextOutputFormat.class);
 
-        JavaPairRDD<Integer, String> tmp = counts
+//        List<Tuple2<Integer, String>> tmp2 = tmp3.collect();
+//        for (Tuple2<Integer, String> tuple2 : tmp2) {
+//            System.out.println("+++++++++++++++++++++++" + tuple2._2() + " : " + tuple2._1());
+//        }
+
+        List<Tuple2<Integer, String>> result = counts
                 .mapToPair(new PairFunction<Tuple2<String, Integer>, Integer, String>() {
 
                     private static final long serialVersionUID = 6722372394958500130L;
@@ -109,16 +114,7 @@ public final class GetTopKWord {
                                                                                    // key
                                                                                    // value
                     }
-                }).cache();
-
-        JavaPairRDD<Integer, String> tmp3 = tmp.sortByKey(true, 1);
-
-//        List<Tuple2<Integer, String>> tmp2 = tmp3.collect();
-//        for (Tuple2<Integer, String> tuple2 : tmp2) {
-//            System.out.println("+++++++++++++++++++++++" + tuple2._2() + " : " + tuple2._1());
-//        }
-
-        List<Tuple2<Integer, String>> result = tmp3.top(Integer.parseInt(args[1]), new MyComparator());
+                }).sortByKey(true, 1).top(Integer.parseInt(args[1]), new MyComparator());
 
         System.out.println("top " + args[1]);
         for (Tuple2<Integer, String> tuple2 : result) {
