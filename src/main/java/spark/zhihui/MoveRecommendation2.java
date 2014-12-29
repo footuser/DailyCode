@@ -29,6 +29,9 @@ import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.mllib.recommendation.ALS;
 import org.apache.spark.mllib.recommendation.MatrixFactorizationModel;
 import org.apache.spark.mllib.recommendation.Rating;
+import org.apache.spark.rdd.RDD;
+import org.netlib.util.doubleW;
+import org.netlib.util.intW;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -41,12 +44,13 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import scala.Tuple2;
+import tachyon.thrift.WorkerService.Processor.returnSpace;
 import util.zhihui.FileUtil;
 
 /**
  * Example using MLLib ALS from Java.
  */
-public final class MoveRecommendation {
+public final class MoveRecommendation2 {
     private static final Pattern SEPARATOR = Pattern.compile("::");
 
     static class ParseMovie implements PairFunction<String, Integer, String> {
@@ -147,12 +151,10 @@ public final class MoveRecommendation {
     }
 
     public static void main(String[] args) {
-        
-        
         SparkConf sparkConf = new SparkConf().setAppName("MoveRecommendation").setMaster("local[4]");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-        String inputDir = "E:/machineLearning_datas";//args[0];
+        String inputDir = "E:/machineLearning_datas";// args[0];
         JavaRDD<String> originalRatings = sc.textFile(inputDir + "/ratings2.dat");
         JavaPairRDD<Long, Rating> ratings = originalRatings.mapToPair(new ParseRating2()).cache();
         // JavaRDD<Rating> ratings = originalRatings.map(new
@@ -160,84 +162,12 @@ public final class MoveRecommendation {
 
         JavaRDD<String> originalMovies = sc.textFile(inputDir + "/movies.dat");
         final Map<Integer, String> movies = originalMovies.mapToPair(new ParseMovie()).collectAsMap();
-        
 
         long numRating = ratings.count();
         long numUser = ratings.map(new getPartOfRating("user")).distinct().count();
         long numMovie = ratings.map(new getPartOfRating("movie")).distinct().count();
         System.out.println("got " + numRating + " ratings from " + numUser + " users on " + numMovie + " movies.");
 
-        // movieId,rating counts
-        /*JavaPairRDD<Integer, Long> movieIdAndRatingCounts =
-                ratings.mapToPair(new getMovieIdAndRatingCounts()).reduceByKey(new Function2<Long, Long, Long>() {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public Long call(Long in0, Long in1) throws Exception {
-                        return in0 + in1;
-                    }
-                });*/
-        
-        
-        // 1.reverse key and value to rating counts,movieId
-        // 2.sort by rating counts desc
-        // 3.reverse to movieId,rating counts
-        // 4.change to movieId,movieTitle
-        // 5.take 15th
-        /*List<Tuple2<Integer, String>> hotMovies = movieIdAndRatingCounts
-                .mapToPair(new reverseKeyAndValue<Integer, Long>())
-                .sortByKey(false).mapToPair(new reverseKeyAndValue<Long, Integer>())
-                .map(new Function<Tuple2<Integer, Long>, Tuple2<Integer, String>>() {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public Tuple2<Integer, String> call(Tuple2<Integer, Long> in) throws Exception {
-                        return new Tuple2<Integer, String>(in._1, movies.get(in._1));
-                    }
-                }).takeOrdered(15);*/
-        
-        /*JavaPairRDD<Long, Integer> tmp1 = movieIdAndRatingCounts.mapToPair(new reverseKeyAndValue<Integer, Long>());
-        System.out.println("----------------------------------------1");
-        JavaPairRDD<Integer, Long> tmp2 = tmp1.sortByKey(false).mapToPair(new reverseKeyAndValue<Long, Integer>());
-        System.out.println("----------------------------------------2");
-        JavaRDD<Tuple2<Integer, String>> tmp3 = tmp2.map(new Function<Tuple2<Integer, Long>, Tuple2<Integer, String>>() {
-            private static final long serialVersionUID = 1L;
-            @Override
-            public Tuple2<Integer, String> call(Tuple2<Integer, Long> in) throws Exception {
-                return new Tuple2<Integer, String>(in._1, movies.get(in._1));
-            }
-        });
-        System.out.println("----------------------------------------3");
-        List<Tuple2<Integer, String>> hotMovies = tmp3.collect().subList(0, 15);
-        System.out.println("-----------------------------------------4");
-        
-        List<Tuple2<Integer, Double>> myRating = new ArrayList<Tuple2<Integer, Double>>();
-        for (Tuple2<Integer, String> tuple2 : hotMovies) {
-            myRating.add(new Tuple2<Integer, Double>(tuple2._1, Double.parseDouble(readUserInput("请输入对电影：" + tuple2._2
-                    + "  的评分(0.0-5.0)："))));
-        }
-        // get my rating
-        JavaRDD<Rating> myRatingRdd = sc.parallelize(myRating).map(new Function<Tuple2<Integer, Double>, Rating>() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public Rating call(Tuple2<Integer, Double> in) throws Exception {
-                return new Rating(0, in._1, in._2);
-            }
-        });*/
-
-        // JavaPairRDD<Long, Rating> myRatingRdd =
-        // sc.parallelize(myRating).mapToPair(
-        // new PairFunction<Tuple2<Integer,Double>, Long, Rating>() {
-        // private static final long serialVersionUID = 1L;
-        //
-        // @Override
-        // public Tuple2<Long, Rating> call(Tuple2<Integer,Double> in) throws
-        // Exception {
-        // return new Tuple2<Long, Rating>(System.currentTimeMillis() % 10, new
-        // Rating(0, in._1, in._2));
-        // }
-        // });
 
         int numPartitions = 20;
         JavaRDD<Rating> training = ratings.filter(new Function<Tuple2<Long, Rating>, Boolean>() {
@@ -268,60 +198,51 @@ public final class MoveRecommendation {
         long numValidation = validation.count();
         long numTest = test.count();
         System.out.println("Training: " + numTraining + ", validation: " + numValidation + ", test: " + numTest);
-        FileUtil.writeToFile("e:/result.txt", 
+        FileUtil.writeToFile("e:/result.txt",
                 "Training: " + numTraining + ", validation: " + numValidation + ", test: " + numTest + "\r\n");
 
-        MatrixFactorizationModel bestModel = null;
-        double bestValidationRmse = Double.MAX_VALUE;
         int bestRank = 0;
         double bestLambda = -1.0;
         int bestNumIter = -1;
-        int[] ranks = {8, 12};
-        double[] lambdas = {0.1, 10.0};
-        int[] numIters = {10, 20};
-        for (int numIter : numIters) {
-            for (int rank : ranks) {
-                for (double lambda : lambdas) {
-                    // Build the recommendation model using ALS
-                    MatrixFactorizationModel model = ALS.train(training.rdd(), rank, numIter, lambda);
+        int rank = 8;
+        double lambda = 0.1;
+        int numIter = 20;
+        // Build the recommendation model using ALS
+        MatrixFactorizationModel bestModel = ALS.train(training.rdd(), rank, numIter, lambda);
 
-                    double validationRmse = computeRmse(model, validation);
+        double validationRmse = computeRmse(bestModel, validation);
 
-                    System.out.println("RMSE (validation) = " + validationRmse + " for the model trained with rank = "
-                            + rank + ", lambda = " + lambda + ", and numIter = " + numIter + ".");
-                    FileUtil.writeToFile("e:/result.txt", 
-                            "RMSE (validation) = " + validationRmse + " for the model trained with rank = "
-                                    + rank + ", lambda = " + lambda + ", and numIter = " + numIter + "." + "\r\n");
-                    if (validationRmse < bestValidationRmse) {
-                        bestModel = model;
-                        bestValidationRmse = validationRmse;
-                        bestRank = rank;
-                        bestLambda = lambda;
-                        bestNumIter = numIter;
-                    }
-                }
-            }
-        }
-        
+        System.out.println("RMSE (validation) = " + validationRmse + " for the model trained with rank = "
+                + rank + ", lambda = " + lambda + ", and numIter = " + numIter + ".");
+        FileUtil.writeToFile("e:/result.txt",
+                "RMSE (validation) = " + validationRmse + " for the model trained with rank = "
+                        + rank + ", lambda = " + lambda + ", and numIter = " + numIter + "." + "\r\n");
+
         double testRmse = computeRmse(bestModel, test);
         System.out.println("The best model was trained with rank = " + bestRank + " and lambda = " + bestLambda
                 + ", and numIter = " + bestNumIter + ", and its RMSE on the test set is " + testRmse + ".");
-        FileUtil.writeToFile("e:/result.txt", 
+        FileUtil.writeToFile("e:/result.txt",
                 "The best model was trained with rank = " + bestRank + " and lambda = " + bestLambda
-                + ", and numIter = " + bestNumIter + ", and its RMSE on the test set is " + testRmse + "." + "\r\n");
-        
+                        + ", and numIter = " + bestNumIter + ", and its RMSE on the test set is " + testRmse + "."
+                        + "\r\n");
 
+        RDD<Rating> predictDatas = bestModel.predict(test.map(new Function<Rating, Tuple2<Object, Object>>() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Tuple2<Object, Object> call(Rating in) throws Exception {
+                return new Tuple2<Object, Object>(in.user(), in.product());
+            }
+        }).rdd());
+        predictDatas.saveAsTextFile("e:/result2");
         
-//        List<Integer> myRatingMovieIds = new ArrayList<Integer>();
-//        for (Tuple2<Integer, Double> tuple2 : myRating) {
-//            myRatingMovieIds.add(tuple2._1);
-//        }
+        
         for (Rating rating : bestModel.recommendProducts(8, 20)) {
             System.out.println("recommend for you: " + movies.get(rating.product()));
-            FileUtil.writeToFile("e:/result.txt", 
+            FileUtil.writeToFile("e:/result.txt",
                     "recommend for you: " + movies.get(rating.product()) + "\r\n");
         }
-        
+
         sc.stop();
     }
 
@@ -330,6 +251,7 @@ public final class MoveRecommendation {
         JavaRDD<Tuple2<Object, Object>> userProducts = training.map(
                 new Function<Rating, Tuple2<Object, Object>>() {
                     private static final long serialVersionUID = 1L;
+
                     public Tuple2<Object, Object> call(Rating r) {
                         return new Tuple2<Object, Object>(r.user(), r.product());
                     }
@@ -339,6 +261,7 @@ public final class MoveRecommendation {
                 model.predict(JavaRDD.toRDD(userProducts)).toJavaRDD().map(
                         new Function<Rating, Tuple2<Tuple2<Integer, Integer>, Double>>() {
                             private static final long serialVersionUID = 1L;
+
                             public Tuple2<Tuple2<Integer, Integer>, Double> call(Rating r) {
                                 return new Tuple2<Tuple2<Integer, Integer>, Double>(
                                         new Tuple2<Integer, Integer>(r.user(), r.product()), r.rating());
@@ -349,6 +272,7 @@ public final class MoveRecommendation {
                 JavaPairRDD.fromJavaRDD(training.map(
                         new Function<Rating, Tuple2<Tuple2<Integer, Integer>, Double>>() {
                             private static final long serialVersionUID = 1L;
+
                             public Tuple2<Tuple2<Integer, Integer>, Double> call(Rating r) {
                                 return new Tuple2<Tuple2<Integer, Integer>, Double>(
                                         new Tuple2<Integer, Integer>(r.user(), r.product()), r.rating());
@@ -358,6 +282,7 @@ public final class MoveRecommendation {
         double MSE = JavaDoubleRDD.fromRDD(ratesAndPreds.map(
                 new Function<Tuple2<Double, Double>, Object>() {
                     private static final long serialVersionUID = 1L;
+
                     public Object call(Tuple2<Double, Double> pair) {
                         Double err = pair._1() - pair._2();
                         return err * err;
