@@ -18,6 +18,8 @@ public class SparkTest {
         SparkConf conf = new SparkConf().setAppName("test-spark").setMaster("local[4]");
         JavaSparkContext sc = new JavaSparkContext(conf);
         List<Integer> data = Arrays.asList(1, 2, 3, 4, 5);
+        
+        //通过Scala集合对象并行化生成
         JavaRDD<Integer> originalDatas = sc.parallelize(data);
 
         //start
@@ -50,32 +52,7 @@ public class SparkTest {
 
         System.out.println(result);
         
-//        afterMapDatas.unpersist();
-        
-        
-        
-        //start
-//        JavaPairRDD<String, Integer> aftermapPairs = originalDatas.mapToPair(new PairFunction<Integer, String, Integer>() {
-//
-//            /**
-//             * 
-//             */
-//            private static final long serialVersionUID = 1L;
-//
-//            @Override
-//            public Tuple2<String, Integer> call(Integer in) throws Exception {
-//                return new Tuple2<String, Integer>(in + "", 1);
-//            }
-//        });
-//        JavaPairRDD<String, Integer> resultPair = aftermapPairs.reduceByKey(new Function2<Integer, Integer, Integer>() {
-//
-//            private static final long serialVersionUID = 1L;
-//            @Override
-//            public Integer call(Integer in1, Integer in2) throws Exception {
-//                return in1 + in2;
-//            }
-//        });
-//        resultPair.collect();
+        sc.stop();
         
 
     }

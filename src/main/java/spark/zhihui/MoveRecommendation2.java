@@ -198,8 +198,8 @@ public final class MoveRecommendation2 {
         long numValidation = validation.count();
         long numTest = test.count();
         System.out.println("Training: " + numTraining + ", validation: " + numValidation + ", test: " + numTest);
-        FileUtil.writeToFile("e:/result.txt",
-                "Training: " + numTraining + ", validation: " + numValidation + ", test: " + numTest + "\r\n");
+//        FileUtil.writeToFile("e:/result.txt",
+//                "Training: " + numTraining + ", validation: " + numValidation + ", test: " + numTest + "\r\n");
 
         int bestRank = 0;
         double bestLambda = -1.0;
@@ -214,17 +214,17 @@ public final class MoveRecommendation2 {
 
         System.out.println("RMSE (validation) = " + validationRmse + " for the model trained with rank = "
                 + rank + ", lambda = " + lambda + ", and numIter = " + numIter + ".");
-        FileUtil.writeToFile("e:/result.txt",
-                "RMSE (validation) = " + validationRmse + " for the model trained with rank = "
-                        + rank + ", lambda = " + lambda + ", and numIter = " + numIter + "." + "\r\n");
+//        FileUtil.writeToFile("e:/result.txt",
+//                "RMSE (validation) = " + validationRmse + " for the model trained with rank = "
+//                        + rank + ", lambda = " + lambda + ", and numIter = " + numIter + "." + "\r\n");
 
         double testRmse = computeRmse(bestModel, test);
         System.out.println("The best model was trained with rank = " + bestRank + " and lambda = " + bestLambda
                 + ", and numIter = " + bestNumIter + ", and its RMSE on the test set is " + testRmse + ".");
-        FileUtil.writeToFile("e:/result.txt",
-                "The best model was trained with rank = " + bestRank + " and lambda = " + bestLambda
-                        + ", and numIter = " + bestNumIter + ", and its RMSE on the test set is " + testRmse + "."
-                        + "\r\n");
+//        FileUtil.writeToFile("e:/result.txt",
+//                "The best model was trained with rank = " + bestRank + " and lambda = " + bestLambda
+//                        + ", and numIter = " + bestNumIter + ", and its RMSE on the test set is " + testRmse + "."
+//                        + "\r\n");
 
         RDD<Rating> predictDatas = bestModel.predict(test.map(new Function<Rating, Tuple2<Object, Object>>() {
             private static final long serialVersionUID = 1L;

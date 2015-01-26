@@ -20,45 +20,30 @@ package spark.zhihui;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
-//import org.apache.hadoop.io.IntWritable;
-//import org.apache.hadoop.io.Text;
-//import org.apache.hadoop.mapred.TextOutputFormat;
-//import org.apache.log4j.Logger;
-import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 
 import scala.Tuple2;
-import tachyon.thrift.WorkerService.Processor.returnSpace;
 
 public final class GetTopKWord {
     private static final Pattern SPACE = Pattern.compile(" ");
 
-    // private static final Logger logger =
-    // Logger.getLogger(JavaWordCount.class);
-
     public static void main(String[] args) throws Exception {
 
-        // if (args.length < 2) {
-        // System.err.println("Usage: JavaWordCount <file>");
-        // System.exit(1);
-        // }
-
-         SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
+         SparkConf sparkConf = new SparkConf().setAppName("getTopKWord");
 //        SparkConf sparkConf = new
-//                SparkConf().setAppName("JavaWordCount").setMaster("local[4]");
+//                SparkConf().setAppName("getTopKWord").setMaster("local[4]");
         JavaSparkContext ctx = new JavaSparkContext(sparkConf);
+        
+        
         JavaRDD<String> lines = ctx.textFile(args[0]);
 
         JavaRDD<String> words = lines.flatMap(new FlatMapFunction<String, String>() {

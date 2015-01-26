@@ -44,6 +44,7 @@ public final class JavaWordCount {
     SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
     JavaSparkContext ctx = new JavaSparkContext(sparkConf);
     
+    //从文件系统构建
     JavaRDD<String> lines = ctx.textFile(args[0]);
     
     //1.同map函数一样：对每一条输入进行指定的操作，然后为每一条输入返回一个对象
