@@ -23,29 +23,18 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 
-import org.apache.spark.mllib.recommendation.ALS;
 import org.apache.spark.mllib.recommendation.MatrixFactorizationModel;
 import org.apache.spark.mllib.recommendation.Rating;
-import org.apache.spark.rdd.RDD;
-import org.netlib.util.doubleW;
-import org.netlib.util.intW;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 import scala.Tuple2;
-import tachyon.thrift.WorkerService.Processor.returnSpace;
-import util.zhihui.FileUtil;
 
 /**
  * Example using MLLib ALS from Java.
@@ -130,7 +119,7 @@ public final class TestSpeed {
         }
 
     }
-    
+
     static class getPartOfRating2 implements Function<Rating, Integer> {
         private static final long serialVersionUID = 1L;
         private String part;
@@ -160,8 +149,8 @@ public final class TestSpeed {
             return new Tuple2<v, k>(in._2, in._1);
         }
     }
-    
-    static class getMovieIdAndRatingCounts implements PairFunction< Rating, Integer, Long> {
+
+    static class getMovieIdAndRatingCounts implements PairFunction<Rating, Integer, Long> {
         private static final long serialVersionUID = 1L;
 
         @Override
@@ -173,49 +162,59 @@ public final class TestSpeed {
 
     public static void main(String[] args) {
         long time = System.currentTimeMillis();
-        if (args.length < 2) {
-            System.err.println("miss parameter: <input location> <output location>");
-            System.exit(1);
-        }
-        
+//        if (args.length < 2) {
+//            System.err.println("miss parameter: <input location> <output location>");
+//            System.exit(1);
+//        }
+
         SparkConf sparkConf = new SparkConf().setAppName("Test-spark-speed!");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
         String inputDir = args[0];
         JavaRDD<String> originalRatings = sc.textFile(inputDir + "/ratings.dat");
-//        JavaPairRDD<Long, Rating> ratings = originalRatings.mapToPair(new ParseRating2()).cache();
-         JavaRDD<Rating> ratings = originalRatings.map(new ParseRating()).cache();
+        // JavaPairRDD<Long, Rating> ratings = originalRatings.mapToPair(new
+        // ParseRating2()).cache();
+        JavaRDD<Rating> ratings = originalRatings.map(new ParseRating()).cache();
 
-//        JavaRDD<String> originalMovies = sc.textFile(inputDir + "/movies.dat");
-//        final Map<Integer, String> movies = originalMovies.mapToPair(new ParseMovie()).collectAsMap();
-        
-//        long numRating = ratings.count();
-//        long numUser = ratings.map(new getPartOfRating("user")).distinct().count();
-//        long numMovie = ratings.map(new getPartOfRating("movie")).distinct().count();
-//        long numUser = ratings.map(new getPartOfRating2("user")).distinct().count();
-//        long numMovie = ratings.map(new getPartOfRating2("movie")).distinct().count();
-//        System.out.println("got " + numRating + " ratings from " + numUser + " users on " + numMovie + " movies.");
+        // JavaRDD<String> originalMovies = sc.textFile(inputDir +
+        // "/movies.dat");
+        // final Map<Integer, String> movies = originalMovies.mapToPair(new
+        // ParseMovie()).collectAsMap();
 
-        /*JavaRDD<Rating> hots = ratings.filter(new Function<Rating, Boolean>() {
+        // long numRating = ratings.count();
+        // long numUser = ratings.map(new
+        // getPartOfRating("user")).distinct().count();
+        // long numMovie = ratings.map(new
+        // getPartOfRating("movie")).distinct().count();
+        // long numUser = ratings.map(new
+        // getPartOfRating2("user")).distinct().count();
+        // long numMovie = ratings.map(new
+        // getPartOfRating2("movie")).distinct().count();
+        // System.out.println("got " + numRating + " ratings from " + numUser +
+        // " users on " + numMovie + " movies.");
+
+        JavaRDD<Rating> hots = ratings.filter(new Function<Rating, Boolean>() {
             @Override
             public Boolean call(Rating in) throws Exception {
                 return in.rating() > 3.0;
             }
         }).cache();
-        
-        JavaPairRDD<Integer, Long> hotMovieIdAndCount = hots.mapToPair(new getMovieIdAndRatingCounts()).cache().reduceByKey(new Function2<Long, Long, Long>() {
-            private static final long serialVersionUID = 1L;
-            @Override
-            public Long call(Long in0, Long in1) throws Exception {
-                return in0 + in1;
-            }
-        });
-        
-        hotMovieIdAndCount.saveAsTextFile(args[1]);
-*/
-        System.out.println("ratings count: " + ratings.count());
+
+//        JavaPairRDD<Integer, Long> hotMovieIdAndCount = hots.mapToPair(new getMovieIdAndRatingCounts()).cache()
+//                .reduceByKey(new Function2<Long, Long, Long>() {
+//                    private static final long serialVersionUID = 1L;
+//
+//                    @Override
+//                    public Long call(Long in0, Long in1) throws Exception {
+//                        return in0 + in1;
+//                    }
+//                });
+//
+//        hotMovieIdAndCount.saveAsTextFile(args[1]);
+
+        System.out.println("rating > 3 count: " + hots.count());
         System.out.println("spark cost:" + (System.currentTimeMillis() - time) + "ms");
-        
+
         sc.stop();
     }
 
